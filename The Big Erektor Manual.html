@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Big Erektor — Manual &amp; Overview</title>
+<link rel="stylesheet" href="_ds/industries-direct-design-system-2c691f95-becc-41e8-8c8d-f644368fe108/tokens/colors.css">
+<link rel="stylesheet" href="_ds/industries-direct-design-system-2c691f95-becc-41e8-8c8d-f644368fe108/tokens/typography.css">
+<link rel="stylesheet" href="_ds/industries-direct-design-system-2c691f95-becc-41e8-8c8d-f644368fe108/tokens/spacing.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--black-900); color:var(--white); font-family:var(--font-body);}
+  a{color:var(--red-400);}
+  a:hover{color:var(--red-500);}
+  header{display:flex; align-items:center; gap:20px; padding:14px 32px; background:var(--black-900); border-bottom:3px solid var(--brand-primary);}
+  .label{font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:var(--tracking-wide); color:var(--steel-400); font-size:11px;}
+  .section-title{font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:var(--tracking-wide); font-size:15px; color:var(--white);}
+  .mono{font-family:var(--font-mono); color:var(--steel-300);}
+  .card{background:var(--black-800); border:1px solid var(--steel-700); border-radius:var(--radius-md); padding:20px;}
+  .wrap{max-width:1200px; margin:0 auto; padding:32px; display:flex; flex-direction:column; gap:28px;}
+  .stage-wrap{width:100%; height:520px; border:1px solid var(--steel-700); border-radius:var(--radius-md); overflow:hidden; background:#1a1b1d;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  ul{margin:0; padding-left:18px; line-height:1.6; color:var(--steel-300);}
+  li::marker{color:var(--red-500);}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="./ERS Dashboard.dc.html" style="font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:12px; letter-spacing:var(--tracking-wide); text-decoration:none;">← Back to Dashboard</a>
+  <div style="width:1px; height:24px; background:var(--steel-700);"></div>
+  <div>
+    <div style="font-family:var(--font-display); font-weight:600; letter-spacing:var(--tracking-wide); font-size:16px; text-transform:uppercase;">The Big Erektor — Manual &amp; Overview</div>
+    <div class="label">Modular heavy fabrication robot · leg-based architecture</div>
+  </div>
+</header>
+
+<div class="wrap" style="position: absolute; left: 88px; top: 116px; width: 1091px; height: 1017px">
+
+  <section>
+    <div class="section-title" style="margin-bottom:10px;">Module — exploded assembly view</div>
+    <div class="stage-wrap">
+      <iframe src="./Module Exploded View.html" title="Module — exploded assembly view" style="width:100%; height:100%; border:0;"></iframe>
+    </div>
+    <div style="font-size:12px; color:var(--steel-400); margin-top:8px;">Drag to orbit · scroll to zoom. Exploded view of a module (left + right leg pair).</div>
+  </section>
+
+  <section class="card">
+    <div class="section-title" style="margin-bottom:10px;">Overview</div>
+    <p style="color:var(--steel-300); line-height:1.65;">The Erektor is a modular heavy industrial robot that transports raw materials around the factory floor, holds and assembles the aluminum frame of a commercial EV charging station, self-loads the finished station onto a flatbed trailer, self-unloads by walking off the trailer edge, and places it gently at its destination. The robot and the product it builds share a structural skeleton — the charging station's own aluminum rail becomes the Erektor's rigid chassis once legs bolt on.</p>
+  </section>
+
+  <section class="grid2">
+  </section>
+
+</div>
+
+<div class="card" style="position: absolute; left: 1206px; top: 177px">
+  <div class="section-title" style="margin-bottom:10px;">Powering on legs and connecting to a controiller</div>
+  <ul>
+    <li>Fully independent, self-contained — own power, control, radio</li>
+    <li>3 caster wheels: 2 free-spin, 1 fixed to the drive-axis motor</li>
+    <li>2 motors per leg — drive axis (foot wheel) and lift axis (ground clearance, trailer transition)</li>
+    <li>Teknic ClearPath-SC servos, one ClearCore board per leg</li>
+    <li>24V logic/control, 56V direct to motors, one XBee radio per leg</li>
+  </ul>
+</div>
+<div class="card" style="position: absolute; left: 1207px; top: 408px">
+  <div class="section-title" style="margin-bottom:10px;">Leg — base unit</div>
+  <ul>
+    <li>Fully independent, self-contained — own power, control, radio</li>
+    <li>3 caster wheels: 2 free-spin, 1 fixed to the drive-axis motor</li>
+    <li>2 motors per leg — drive axis (foot wheel) and lift axis (ground clearance, trailer transition)</li>
+    <li>Teknic ClearPath-SC servos, one ClearCore board per leg</li>
+    <li>24V logic/control, 56V direct to motors, one XBee radio per leg</li>
+  </ul>
+</div>
+<div class="card" style="position: absolute; left: 1201px; top: 646px; width: 746px; height: 287px">
+  <div class="section-title" style="margin-bottom:10px;">Module &amp; build</div>
+  <ul>
+    <li>Module = one right leg + one left leg — logical grouping only, no shared structure</li>
+    <li>Builds use 3–6 modules (6–12 legs) depending on charging-station length</li>
+    <li>Pairing is arbitrary each session — no persistent "Erektor" identity</li>
+    <li>Legs bolt to a universal mounting bracket, fixed attachment points</li>
+  </ul>
+</div>
+
+</body>
+</html>

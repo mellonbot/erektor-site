@@ -316,7 +316,7 @@
   <section class="band wrap" id="cycle">
     <div class="sec-head reveal">
       <span class="eyebrow">Self-delivery cycle</span>
-      <h2>One rigid body, seven states — from raw stock to placed station.</h2>
+      <h2>One rigid body, six states — from raw stock to placed station.</h2>
       <p>The Erektor is not a fixed unit. Independently mobile legs claim a build, bolt to the station's own rail, become one structure, deliver, and disperse. Rigidity builds and dissolves along the way.</p>
     </div>
     <div class="steps">
@@ -346,7 +346,7 @@
             <li><span>Casters / leg</span><span>3 &mdash; 1 driven, 2 free</span></li>
             <li><span>Control</span><span>ClearCore · 24V logic</span></li>
             <li><span>Power to motor</span><span>56V direct</span></li>
-            <li><span>Comms</span><span>XBee node · per session</span></li>
+            <li><span>Comms</span><span>XBee Radio node - 300m+ controller range</span></li>
           </ul>
         </div>
         <div class="grid2">
@@ -378,7 +378,7 @@
       <span class="render-hud cf-corner">FULL SETUP · CAD · 3D</span>
       <canvas id="moduleCanvas"></canvas>
       <div class="render-controls">
-        <button class="rbtn" data-act="rotate" aria-pressed="false">Auto-rotate</button>
+        <button class="rbtn" data-act="rotate" aria-pressed="true">Auto-rotate</button>
         <button class="rbtn" data-act="reset" aria-pressed="false">Reset view</button>
         <span class="render-count mono" id="triCount"></span>
       </div>
@@ -601,13 +601,32 @@
       lx.strokeStyle = ink; lx.lineWidth = 2;
       var fw = Math.min(w * 0.34, 120);
       lx.beginPath(); lx.moveTo(cx - fw / 2, botY); lx.lineTo(cx + fw / 2, botY); lx.stroke();
-      [[-fw/2, faint], [0, cyan], [fw/2, faint]].forEach(function (c) {
+      var red = '#ef4444';
+      [[-fw/2, red], [0, cyan], [fw/2, red]].forEach(function (c) {
         lx.fillStyle = c[1]; lx.beginPath(); lx.arc(cx + c[0], botY + 10, 4, 0, Math.PI * 2); lx.fill();
       });
-      lx.fillStyle = faint; lx.font = '10px ui-monospace, Menlo, monospace';
+      lx.strokeStyle = red; lx.lineWidth = 2;
+      lx.beginPath(); lx.moveTo(cx - fw / 2, botY + 2); lx.lineTo(cx + fw / 2, botY + 2); lx.stroke();
+      lx.fillStyle = cyan; lx.font = '10px ui-monospace, Menlo, monospace';
       lx.textAlign = 'left'; lx.fillText('LIFT AXIS', cx + 8, (topY + botY) / 2);
-      lx.textAlign = 'center'; lx.fillText('DRIVE', cx, botY + 26);
-      lx.textAlign = 'right'; lx.fillText('CLEARCORE', cx - 8, topY + 3);
+      lx.textAlign = 'right'; lx.fillText('CLEARCORE', cx, botY + 28);
+      lx.fillStyle = red;
+      lx.textAlign = 'left'; lx.fillText('DRIVE AXIS', cx + fw / 2 + 8, botY + 12);
+
+      var green = '#22c55e';
+      var markerSize = 8;
+      var clearcoreX = cx;
+      var clearcoreY = botY + 28;
+      var driveDotX = cx + fw / 2;
+      var driveAxisX = cx + fw / 2 + 8;
+      var driveAxisY = botY + 12;
+      var markerX = (clearcoreX + driveDotX) / 2 - markerSize / 2;
+      var markerY = botY + 10 - markerSize / 2;
+      lx.fillStyle = green;
+      lx.fillRect(markerX, markerY, markerSize, markerSize);
+
+      lx.textAlign = 'left';
+      lx.fillText('BATTERY 56V/24V', cx + 20, clearcoreY);
     }
     lsize();
     window.addEventListener('resize', lsize);
@@ -655,7 +674,7 @@
 
     var RED = [220, 52, 44], GREY = [74, 80, 88];
     var DEF = { yaw: 0.62, pitch: 0.24, dist: 3.25 };
-    var yaw = DEF.yaw, pitch = DEF.pitch, dist = DEF.dist, auto = false;
+    var yaw = DEF.yaw, pitch = DEF.pitch, dist = DEF.dist, auto = true;
     var Lx = -0.4, Ly = 0.72, Lz = 0.56;
     (function () { var m = Math.hypot(Lx, Ly, Lz); Lx /= m; Ly /= m; Lz /= m; })();
 

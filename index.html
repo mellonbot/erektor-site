@@ -81,6 +81,7 @@
     background: color-mix(in srgb, var(--ground) 82%, transparent);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--line);
+    contain: layout style paint;
   }
   .topbar-in { display: flex; align-items: center; gap: 1.4rem; height: 60px; }
   .brand { display: flex; align-items: baseline; gap: 0.55rem; font-weight: 800; font-size: 1.02rem; letter-spacing: 0.02em; }
@@ -119,6 +120,7 @@
     -webkit-mask-image: radial-gradient(120% 80% at 70% 20%, #000 0%, transparent 72%);
     mask-image: radial-gradient(120% 80% at 70% 20%, #000 0%, transparent 72%);
     opacity: 0.5;
+    contain: paint;
   }
   .hero-in { position: relative; z-index: 2; display: grid; grid-template-columns: 1.02fr 0.98fr; gap: 2.5rem; align-items: center; }
   @media (max-width: 900px) { .hero-in { grid-template-columns: 1fr; gap: 1.5rem; } }
@@ -134,6 +136,7 @@
       radial-gradient(120% 120% at 80% 0%, var(--cyan-glow), transparent 60%),
       var(--surface);
     box-shadow: var(--shadow); overflow: hidden; aspect-ratio: 4 / 3.4;
+    contain: layout style paint;
   }
   .canvas-frame canvas { display: block; width: 100%; height: 100%; }
   .cf-label {
@@ -142,7 +145,7 @@
     display: flex; gap: 0.5rem; align-items: center;
   }
   .cf-corner { position: absolute; top: 10px; right: 12px; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.14em; color: var(--cyan); text-transform: uppercase; }
-  .blink { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 var(--green); animation: pulse 2.4s infinite; }
+  .blink { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 var(--green); animation: pulse 2.4s infinite; will-change: box-shadow; }
   @keyframes pulse { 0%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 60%, transparent);} 70%{ box-shadow: 0 0 0 7px transparent;} 100%{ box-shadow: 0 0 0 0 transparent;} }
 
   .specstrip { border-block: 1px solid var(--line); background: var(--surface); }
@@ -155,7 +158,7 @@
   .spec .n small { font-size: 0.9rem; color: var(--cyan); font-weight: 600; }
   .spec .k { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-faint); margin-top: 0.35rem; }
 
-  section.band { padding: 5.5rem 0; }
+  section.band { padding: 5.5rem 0; content-visibility: auto; contain-intrinsic-size: auto 500px; }
   .sec-head { max-width: 60ch; margin-bottom: 3rem; }
   .sec-head h2 { font-size: clamp(1.85rem, 3.6vw, 2.7rem); margin-top: 0.9rem; }
   .sec-head p { color: var(--ink-muted); margin-top: 1rem; font-size: 1.05rem; }
@@ -223,8 +226,7 @@
     position: relative; border: 1px solid var(--line-strong); border-radius: 12px;
     overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 16 / 10; cursor: grab;
     touch-action: none;
-    background: radial-gradient(120% 120% at 70% 8%, var(--cyan-glow), transparent 55%), var(--surface);
-  }
+    background: radial-gradient(120% 120% at 70% 8%, var(--cyan-glow), transparent 55%), var(--surface);    contain: content;  }
   .render-stage.grabbing { cursor: grabbing; }
   .render-stage canvas { display: block; width: 100%; height: 100%; }
   .render-hud { position: absolute; top: 10px; right: 12px; pointer-events: none; }
@@ -464,6 +466,16 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#34d3ee';
   }
 
+  /* Cache CSS variables to reduce getComputedStyle calls */
+  var cssCache = {};
+  var originalCssvar = cssvar;
+  cssvar = function(name) {
+    if (!cssCache[name]) cssCache[name] = originalCssvar(name);
+    return cssCache[name];
+  };
+  var mutationCssCache = new MutationObserver(function () { cssCache = {}; });
+  mutationCssCache.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
   var io = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
   }, { threshold: 0.14 });
@@ -589,7 +601,24 @@
   /* ---- CAD solid render (decimated real mesh, no external libs) ---- */
   var stage = document.getElementById('renderStage');
   var mcanvas = document.getElementById('moduleCanvas');
-  if (stage && mcanvas && window.ERK_MESH) {
+  var meshLoaded = false;
+  var meshReady = function() { return window.ERK_MESH && meshLoaded; };
+  
+  if (stage && mcanvas) {
+    var stageObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting && !meshLoaded && window.ERK_MESH) {
+          meshLoaded = true;
+          initRender();
+          stageObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    stageObserver.observe(stage);
+  }
+
+  function initRender() {
+    if (!stage || !mcanvas || !window.ERK_MESH) return;
     var g = mcanvas.getContext('2d');
     var mdpr = Math.min(window.devicePixelRatio || 1, 2);
     var VW = 0, VH = 0, dirty = true;
@@ -676,6 +705,12 @@
 
     msize(); window.addEventListener('resize', msize);
     requestAnimationFrame(draw);
+  }
+  
+  // If already scrolled to render section on load, initialize immediately
+  if (stage && !meshLoaded && window.ERK_MESH && stage.getBoundingClientRect().top < window.innerHeight) {
+    meshLoaded = true;
+    initRender();
   }
 })();
 </script>

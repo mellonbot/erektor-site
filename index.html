@@ -296,24 +296,6 @@
   .field input[type="text"]:focus, .field textarea:focus { outline: none; border-color: var(--cyan-deep); }
   .field textarea { resize: vertical; min-height: 96px; }
   .field-error { display: block; margin-top: 0.4rem; font-size: 0.78rem; color: var(--field-error-color, #e0625f); min-height: 0; }
-  .file-drop {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;
-    border: 1px dashed var(--line-strong); border-radius: 8px; background: var(--surface-2);
-    padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: border-color .15s ease;
-  }
-  .file-drop:hover { border-color: var(--cyan-deep); }
-  .file-drop svg { color: var(--ink-faint); }
-  .file-drop span { color: var(--ink-muted); font-size: 0.82rem; }
-  .file-drop input[type="file"] { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
-  .file-previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.6rem; margin-top: 0.8rem; }
-  .file-preview { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
-  .file-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .file-preview button {
-    position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%;
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink-muted);
-    cursor: pointer; display: grid; place-items: center; font-size: 0.7rem; line-height: 1; padding: 0;
-  }
-  .file-preview button:hover { color: #05141a; background: var(--cyan); border-color: transparent; }
   .modal-submit { margin-top: 1.6rem; width: 100%; justify-content: center; }
   .modal-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .modal-form-error { display: none; margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid color-mix(in srgb, #e0625f 45%, transparent); color: #e0625f; font-size: 0.85rem; }
@@ -532,12 +514,14 @@
     <button type="button" class="modal-close" id="briefingClose" aria-label="Close">&times;</button>
 
     <div id="briefingFormWrap">
-      <h2 id="briefingTitle">Request an engineering briefing</h2>
-      <p class="lede-sm">Tell us about your application and we'll walk you through the mechanical, control, and ERS architecture.</p>
+      <div id="briefingIntro">
+        <h2 id="briefingTitle">Request an engineering briefing</h2>
+        <p class="lede-sm">Tell us about your application and we'll walk you through the mechanical, control, and ERS architecture.</p>
+      </div>
 
       <div id="briefingFormError" data-fs-error class="modal-form-error"></div>
 
-      <form id="briefingForm" action="https://formspree.io/f/mjgnnbrw" method="POST" enctype="multipart/form-data">
+      <form id="briefingForm" action="https://formspree.io/f/mjgnnbrw" method="POST">
         <input type="hidden" name="_subject" value="New engineering briefing request — erektor.systems">
 
         <div class="field">
@@ -564,26 +548,15 @@
           <span data-fs-error="applicationDescription" class="field-error"></span>
         </div>
 
-        <div class="field">
-          <label for="bf-images">Reference images</label>
-          <label class="file-drop" for="bf-images">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-            <span id="fileDropLabel">Click to upload images (up to 5, 5MB each)</span>
-            <input type="file" id="bf-images" name="images" accept="image/*" multiple>
-          </label>
-          <div class="file-previews" id="filePreviews"></div>
-          <span data-fs-error="images" class="field-error"></span>
-        </div>
-
         <button type="submit" class="btn btn-primary modal-submit" data-fs-submit-btn>Submit request</button>
       </form>
-    </div>
 
-    <div class="modal-success" id="briefingSuccess" tabindex="-1" data-fs-success>
-      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin:0 auto; display:block;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-      <h2>Request received</h2>
-      <p>Thanks for reaching out. A member of our engineering team will review your application and follow up shortly.</p>
-      <button type="button" class="btn btn-primary" id="briefingDone">Done</button>
+      <div class="modal-success" id="briefingSuccess" tabindex="-1" data-fs-success>
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin:0 auto; display:block;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <h2>Request received</h2>
+        <p>Thanks for reaching out. A member of our engineering team will review your application and follow up shortly.</p>
+        <button type="button" class="btn btn-primary" id="briefingDone">Done</button>
+      </div>
     </div>
   </div>
 </div>
@@ -883,72 +856,15 @@
   var closeBtn = document.getElementById('briefingClose');
   var doneBtn = document.getElementById('briefingDone');
   var form = document.getElementById('briefingForm');
-  var formWrap = document.getElementById('briefingFormWrap');
+  var introEl = document.getElementById('briefingIntro');
   var successEl = document.getElementById('briefingSuccess');
   var formErrorEl = document.getElementById('briefingFormError');
-  var fileInput = document.getElementById('bf-images');
-  var fileDropLabel = document.getElementById('fileDropLabel');
-  var previewsEl = document.getElementById('filePreviews');
   var lastFocused = null;
-  var MAX_FILES = 5;
-  var MAX_SIZE = 5 * 1024 * 1024;
-
-  var selectedFiles = [];
-  var previewUrls = [];
-
-  function syncInputFiles() {
-    var dt = new DataTransfer();
-    selectedFiles.forEach(function (f) { dt.items.add(f); });
-    fileInput.files = dt.files;
-  }
-
-  function renderPreviews() {
-    previewUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    previewUrls = [];
-    previewsEl.innerHTML = '';
-    selectedFiles.forEach(function (file, i) {
-      var url = URL.createObjectURL(file);
-      previewUrls.push(url);
-      var item = document.createElement('div');
-      item.className = 'file-preview';
-      var img = document.createElement('img');
-      img.src = url;
-      img.alt = file.name;
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.setAttribute('aria-label', 'Remove ' + file.name);
-      btn.textContent = '×';
-      btn.addEventListener('click', function () {
-        selectedFiles.splice(i, 1);
-        syncInputFiles();
-        renderPreviews();
-      });
-      item.appendChild(img);
-      item.appendChild(btn);
-      previewsEl.appendChild(item);
-    });
-    var atLimit = selectedFiles.length >= MAX_FILES;
-    fileInput.disabled = atLimit;
-    fileDropLabel.textContent = atLimit
-      ? 'Maximum of ' + MAX_FILES + ' images attached'
-      : 'Click to upload images (up to ' + MAX_FILES + ', 5MB each)';
-  }
-
-  fileInput.addEventListener('change', function () {
-    var picked = Array.from(fileInput.files || []).filter(function (f) {
-      return f.size <= MAX_SIZE;
-    });
-    selectedFiles = selectedFiles.concat(picked).slice(0, MAX_FILES);
-    syncInputFiles();
-    renderPreviews();
-  });
 
   function resetModal() {
     form.reset();
-    selectedFiles = [];
-    syncInputFiles();
-    renderPreviews();
-    formWrap.style.display = '';
+    introEl.style.display = '';
+    form.style.display = '';
     successEl.removeAttribute('data-fs-active');
     if (formErrorEl) formErrorEl.removeAttribute('data-fs-active');
     form.querySelectorAll('[data-fs-error]').forEach(function (el) {
@@ -992,7 +908,8 @@
 
   var successObserver = new MutationObserver(function () {
     if (successEl.hasAttribute('data-fs-active')) {
-      formWrap.style.display = 'none';
+      introEl.style.display = 'none';
+      form.style.display = 'none';
       successEl.focus();
     }
   });

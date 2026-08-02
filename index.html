@@ -261,6 +261,49 @@
     .blink { animation: none; }
   }
   .erk a:focus-visible, .erk button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+
+  /* briefing modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200; display: none;
+    align-items: flex-start; justify-content: center;
+    padding: 5vh 1.2rem; overflow-y: auto;
+    background: color-mix(in srgb, #000 68%, transparent);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    width: min(560px, 100%); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 2.1rem; box-shadow: var(--shadow); position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 1.1rem; right: 1.1rem; border: 1px solid var(--line);
+    background: transparent; color: var(--ink-muted); width: 32px; height: 32px;
+    border-radius: 6px; cursor: pointer; display: grid; place-items: center; font-size: 1.1rem; line-height: 1;
+  }
+  .modal-close:hover { color: var(--ink); border-color: var(--line-strong); }
+  .modal h2 { font-size: clamp(1.35rem, 2.6vw, 1.7rem); padding-right: 2rem; }
+  .modal .lede-sm { color: var(--ink-muted); margin-top: 0.6rem; font-size: 0.95rem; }
+  .field { margin-top: 1.3rem; }
+  .field label {
+    display: block; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.5rem;
+  }
+  .field input[type="text"], .field textarea {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 0.7em 0.85em; color: var(--ink); font-size: 0.92rem;
+    font-family: inherit; transition: border-color .15s ease;
+  }
+  .field input[type="text"]:focus, .field textarea:focus { outline: none; border-color: var(--cyan-deep); }
+  .field textarea { resize: vertical; min-height: 96px; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .modal-submit { margin-top: 1.6rem; width: 100%; justify-content: center; }
+  .modal-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .modal-form-error { display: none; margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid color-mix(in srgb, #e0625f 45%, transparent); color: #e0625f; font-size: 0.85rem; }
+  .modal-success { display: none; text-align: center; padding: 1rem 0; }
+  .modal-success svg { color: var(--green); }
+  .modal-success h2 { margin-top: 1rem; }
+  .modal-success p { color: var(--ink-muted); margin-top: 0.7rem; }
+  .modal-success .btn { margin-top: 1.6rem; }
 </style>
 </head>
 <body>
@@ -279,7 +322,7 @@
         <a class="navlink" href="#ers">ERS</a>
         <a class="navlink" href="#scale">Scale</a>
         <button class="themebtn" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
-        <a class="btn btn-primary" href="#contact">Request briefing</a>
+        <a class="btn btn-primary js-open-briefing" href="#contact">Request briefing</a>
       </nav>
     </div>
   </header>
@@ -292,7 +335,7 @@
         <h1>The machine that <span class="em">builds</span> the charging station — then <span class="em">delivers</span> it.</h1>
         <p class="lede">A modular heavy-industrial robot that assembles a commercial EV charging station on the factory floor, self-loads onto an over-the-road trailer, walks off at the destination, and sets the finished station gently in place.</p>
         <div class="hero-cta">
-          <a class="btn btn-primary" href="#contact">Request engineering briefing →</a>
+          <a class="btn btn-primary js-open-briefing" href="#contact">Request engineering briefing →</a>
           <a class="btn" href="#render">See the machine</a>
         </div>
       </div>
@@ -444,7 +487,7 @@
       <h2>Bring the line to the station's own frame.</h2>
       <p>We're sharing the full system architecture — mechanical, control protocol, and ERS — with select manufacturing and EV-infrastructure partners. Request a technical briefing.</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#contact">Request engineering briefing →</a>
+        <a class="btn btn-primary js-open-briefing" href="#contact">Request engineering briefing →</a>
         <a class="btn" href="#render">Inspect the model</a>
       </div>
     </div>
@@ -461,6 +504,56 @@
       <div>System Architecture · Draft 3</div>
     </div>
   </footer>
+</div>
+
+<div class="modal-overlay" id="briefingOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="briefingTitle">
+    <button type="button" class="modal-close" id="briefingClose" aria-label="Close">&times;</button>
+
+    <div id="briefingFormWrap">
+      <div id="briefingIntro">
+        <h2 id="briefingTitle">Request an engineering briefing</h2>
+        <p class="lede-sm">Tell us about your application and we'll walk you through the mechanical, control, and ERS architecture.</p>
+      </div>
+
+      <div id="briefingFormError" class="modal-form-error"></div>
+
+      <form id="briefingForm" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="857804e8-cdbf-499d-9f64-da557541e395">
+        <input type="hidden" name="subject" value="New engineering briefing request — erektor.systems">
+        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off">
+
+        <div class="field">
+          <label for="bf-name">Name</label>
+          <input type="text" id="bf-name" name="name" required>
+        </div>
+
+        <div class="field">
+          <label for="bf-role">Role</label>
+          <input type="text" id="bf-role" name="role" required>
+        </div>
+
+        <div class="field">
+          <label for="bf-business">Business name</label>
+          <input type="text" id="bf-business" name="businessName" required>
+        </div>
+
+        <div class="field">
+          <label for="bf-description">Application description</label>
+          <textarea id="bf-description" name="applicationDescription" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary modal-submit">Submit request</button>
+      </form>
+
+      <div class="modal-success" id="briefingSuccess" tabindex="-1">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin:0 auto; display:block;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <h2>Request received</h2>
+        <p>Thanks for reaching out. A member of our engineering team will review your application and follow up shortly.</p>
+        <button type="button" class="btn btn-primary" id="briefingDone">Done</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -748,6 +841,109 @@
     meshLoaded = true;
     initRender();
   }
+})();
+</script>
+
+<script>
+(function () {
+  var overlay = document.getElementById('briefingOverlay');
+  var closeBtn = document.getElementById('briefingClose');
+  var doneBtn = document.getElementById('briefingDone');
+  var form = document.getElementById('briefingForm');
+  var introEl = document.getElementById('briefingIntro');
+  var successEl = document.getElementById('briefingSuccess');
+  var formErrorEl = document.getElementById('briefingFormError');
+  var submitBtn = form.querySelector('.modal-submit');
+  var submitBtnDefaultText = submitBtn.textContent;
+  var lastFocused = null;
+
+  function showError(message) {
+    formErrorEl.textContent = message;
+    formErrorEl.style.display = 'block';
+  }
+
+  function hideError() {
+    formErrorEl.textContent = '';
+    formErrorEl.style.display = 'none';
+  }
+
+  function showSuccess() {
+    introEl.style.display = 'none';
+    form.style.display = 'none';
+    successEl.style.display = 'block';
+    successEl.focus();
+  }
+
+  function resetModal() {
+    form.reset();
+    introEl.style.display = '';
+    form.style.display = '';
+    successEl.style.display = '';
+    hideError();
+    submitBtn.disabled = false;
+    submitBtn.textContent = submitBtnDefaultText;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    hideError();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.success) {
+          showSuccess();
+        } else {
+          showError(data.message || 'Something went wrong. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitBtnDefaultText;
+        }
+      })
+      .catch(function () {
+        showError('Network error — please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtnDefaultText;
+      });
+  });
+
+  function openModal(trigger) {
+    lastFocused = trigger || document.activeElement;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var firstField = document.getElementById('bf-name');
+    if (firstField) firstField.focus();
+  }
+
+  function closeModal() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    resetModal();
+    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+  }
+
+  document.querySelectorAll('.js-open-briefing').forEach(function (trigger) {
+    trigger.addEventListener('click', function (e) {
+      e.preventDefault();
+      openModal(trigger);
+    });
+  });
+
+  closeBtn.addEventListener('click', closeModal);
+  doneBtn.addEventListener('click', closeModal);
+
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+  });
 })();
 </script>
 

@@ -295,14 +295,11 @@
   }
   .field input[type="text"]:focus, .field textarea:focus { outline: none; border-color: var(--cyan-deep); }
   .field textarea { resize: vertical; min-height: 96px; }
-  .field-error { display: block; margin-top: 0.4rem; font-size: 0.78rem; color: var(--field-error-color, #e0625f); min-height: 0; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
   .modal-submit { margin-top: 1.6rem; width: 100%; justify-content: center; }
   .modal-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .modal-form-error { display: none; margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid color-mix(in srgb, #e0625f 45%, transparent); color: #e0625f; font-size: 0.85rem; }
-  .modal-form-error[data-fs-active] { display: block; }
-  .field-error:empty { margin-top: 0; }
   .modal-success { display: none; text-align: center; padding: 1rem 0; }
-  .modal-success[data-fs-active] { display: block; }
   .modal-success svg { color: var(--green); }
   .modal-success h2 { margin-top: 1rem; }
   .modal-success p { color: var(--ink-muted); margin-top: 0.7rem; }
@@ -519,39 +516,37 @@
         <p class="lede-sm">Tell us about your application and we'll walk you through the mechanical, control, and ERS architecture.</p>
       </div>
 
-      <div id="briefingFormError" data-fs-error class="modal-form-error"></div>
+      <div id="briefingFormError" class="modal-form-error"></div>
 
-      <form id="briefingForm" action="https://formspree.io/f/mjgnnbrw" method="POST">
-        <input type="hidden" name="_subject" value="New engineering briefing request — erektor.systems">
+      <form id="briefingForm" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="857804e8-cdbf-499d-9f64-da557541e395">
+        <input type="hidden" name="subject" value="New engineering briefing request — erektor.systems">
+        <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off">
 
         <div class="field">
           <label for="bf-name">Name</label>
-          <input type="text" id="bf-name" name="name" data-fs-field required>
-          <span data-fs-error="name" class="field-error"></span>
+          <input type="text" id="bf-name" name="name" required>
         </div>
 
         <div class="field">
           <label for="bf-role">Role</label>
-          <input type="text" id="bf-role" name="role" data-fs-field required>
-          <span data-fs-error="role" class="field-error"></span>
+          <input type="text" id="bf-role" name="role" required>
         </div>
 
         <div class="field">
           <label for="bf-business">Business name</label>
-          <input type="text" id="bf-business" name="businessName" data-fs-field required>
-          <span data-fs-error="businessName" class="field-error"></span>
+          <input type="text" id="bf-business" name="businessName" required>
         </div>
 
         <div class="field">
           <label for="bf-description">Application description</label>
-          <textarea id="bf-description" name="applicationDescription" data-fs-field required></textarea>
-          <span data-fs-error="applicationDescription" class="field-error"></span>
+          <textarea id="bf-description" name="applicationDescription" required></textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary modal-submit" data-fs-submit-btn>Submit request</button>
+        <button type="submit" class="btn btn-primary modal-submit">Submit request</button>
       </form>
 
-      <div class="modal-success" id="briefingSuccess" tabindex="-1" data-fs-success>
+      <div class="modal-success" id="briefingSuccess" tabindex="-1">
         <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin:0 auto; display:block;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
         <h2>Request received</h2>
         <p>Thanks for reaching out. A member of our engineering team will review your application and follow up shortly.</p>
@@ -852,26 +847,70 @@
 <script>
 (function () {
   var overlay = document.getElementById('briefingOverlay');
-  var modal = overlay.querySelector('.modal');
   var closeBtn = document.getElementById('briefingClose');
   var doneBtn = document.getElementById('briefingDone');
   var form = document.getElementById('briefingForm');
   var introEl = document.getElementById('briefingIntro');
   var successEl = document.getElementById('briefingSuccess');
   var formErrorEl = document.getElementById('briefingFormError');
+  var submitBtn = form.querySelector('.modal-submit');
+  var submitBtnDefaultText = submitBtn.textContent;
   var lastFocused = null;
+
+  function showError(message) {
+    formErrorEl.textContent = message;
+    formErrorEl.style.display = 'block';
+  }
+
+  function hideError() {
+    formErrorEl.textContent = '';
+    formErrorEl.style.display = 'none';
+  }
+
+  function showSuccess() {
+    introEl.style.display = 'none';
+    form.style.display = 'none';
+    successEl.style.display = 'block';
+    successEl.focus();
+  }
 
   function resetModal() {
     form.reset();
     introEl.style.display = '';
     form.style.display = '';
-    successEl.removeAttribute('data-fs-active');
-    if (formErrorEl) formErrorEl.removeAttribute('data-fs-active');
-    form.querySelectorAll('[data-fs-error]').forEach(function (el) {
-      el.removeAttribute('data-fs-active');
-      el.textContent = '';
-    });
+    successEl.style.display = '';
+    hideError();
+    submitBtn.disabled = false;
+    submitBtn.textContent = submitBtnDefaultText;
   }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    hideError();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.success) {
+          showSuccess();
+        } else {
+          showError(data.message || 'Something went wrong. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitBtnDefaultText;
+        }
+      })
+      .catch(function () {
+        showError('Network error — please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtnDefaultText;
+      });
+  });
 
   function openModal(trigger) {
     lastFocused = trigger || document.activeElement;
@@ -905,23 +944,8 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
   });
-
-  var successObserver = new MutationObserver(function () {
-    if (successEl.hasAttribute('data-fs-active')) {
-      introEl.style.display = 'none';
-      form.style.display = 'none';
-      successEl.focus();
-    }
-  });
-  successObserver.observe(successEl, { attributes: true, attributeFilter: ['data-fs-active'] });
 })();
 </script>
-
-<script>
-  window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
-  formspree('initForm', { formElement: '#briefingForm', formId: 'mjgnnbrw' });
-</script>
-<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
 
 </body>
 </html>
